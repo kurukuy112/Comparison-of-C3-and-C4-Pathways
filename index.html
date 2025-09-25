@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>C3 vs C4 Grassland Simulation</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      background: #f0f4f9;
+      color: #333;
+    }
+    header {
+      background: linear-gradient(135deg, #6b8e23, #4c7017);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    header h1 {
+      margin: 10px 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    header h2 {
+      margin: 5px 0;
+      font-size: 1.4rem;
+      font-weight: 500;
+    }
+    header h3 {
+      margin: 20px 0 10px;
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+    header p {
+      margin: 8px 0;
+      font-size: 0.95rem;
+    }
+    main {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    section.intro {
+      margin-bottom: 25px;
+    }
+    section.intro h4 {
+      margin-top: 0;
+      font-size: 1.3rem;
+      color: #4c7017;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .controls label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+    select, input, button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background: #6b8e23;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #557a1f;
+    }
+    #outputBox {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      background: #f9fafb;
+      border: 1px solid #ddd;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Pangasinan State University</h1>
+  <h2>Bachelor of Science in Biology</h2>
+  <p><b>SC 104 Plant Ecology</b></p>
+  <h3>Some Like It Hot: Comparison of C3 and C4 Pathways</h3>
+  <p><em>(This exercise is based on Ehleringer, J. R., Cerling, T. E., and Helliker, B. R. 1997.  
+    C4 photosynthesis, atmospheric CO₂, and climate. Oecologia 112: 285–299.)</em></p>
+</header>
+
+<main>
+  <!-- Introduction Section -->
+  <section class="intro">
+    <h4>Introduction</h4>
+    <p>
+      Plants use different photosynthetic pathways to capture carbon dioxide and convert it into organic compounds. 
+      The two most common pathways are <b>C3 photosynthesis</b> and <b>C4 photosynthesis</b>.
+    </p>
+    <p>
+      <b>C3 plants</b> fix carbon through the Calvin cycle, producing a three-carbon compound as the first stable product. 
+      They perform well in cooler, wetter, and shadier environments but are less efficient under high light, 
+      high temperature, or water-limited conditions. Examples include rice, wheat, soybean, and most temperate trees.
+    </p>
+    <p>
+      <b>C4 plants</b> have an additional mechanism that concentrates CO₂ in specialized cells before entering the Calvin cycle. 
+      This adaptation minimizes photorespiration, making them more efficient in hot, dry, and sunny environments. 
+      Examples include maize (corn), sugarcane, sorghum, and many tropical grasses.
+    </p>
+    <p>
+      Geographically, C3 plants dominate cooler and higher-latitude regions, while C4 plants are more common 
+      in tropical and subtropical grasslands and savannas. The balance between these plant types is influenced 
+      by both <b>climate</b> and <b>atmospheric CO₂ concentration</b>.
+    </p>
+  </section>
+
+  <!-- Simulation Controls -->
+  <section class="controls">
+    <div>
+      <label for="co2">CO₂ level:</label>
+      <select id="co2">
+        <option value="180">Preindustrial (180 ppm)</option>
+        <option value="350">Current (350 ppm)</option>
+        <option value="500">Future (500 ppm)</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="lat">Latitude (°N):</label>
+      <input type="number" id="lat" value="30" min="25" max="60" step="5">
+    </div>
+
+    <div>
+      <br>
+      <button onclick="runSimulation()">Run Simulation</button>
+    </div>
+  </section>
+
+  <canvas id="yieldChart" width="600" height="400"></canvas>
+
+  <div id="outputBox">
+    <strong>Simulation Result:</strong> Select CO₂ level and latitude, then click <em>Run Simulation</em>.
+  </div>
+</main>
+
+<script>
+  // Example datasets for different CO₂ levels and latitudes
+  function getYield(co2, lat) {
+    let baseC3, baseC4;
+
+    if (co2 == 180) { // Preindustrial
+      baseC3 = 500; baseC4 = 700;
+    } else if (co2 == 350) { // Current
+      baseC3 = 550; baseC4 = 650;
+    } else { // 500 ppm future
+      baseC3 = 650; baseC4 = 600;
+    }
+
+    // adjust for latitude (higher lat → lower yield for both, stronger for C4)
+    let latFactor = 1 - (lat - 25) * 0.02;
+    let c3 = Math.round(baseC3 * latFactor);
+    let c4 = Math.round(baseC4 * (latFactor - 0.01));
+
+    return { c3, c4 };
+  }
+
+  const ctx = document.getElementById('yieldChart').getContext('2d');
+  let chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ["C3", "C4"],
+      datasets: [{
+        label: "Quantum Yield",
+        data: [0, 0],
+        backgroundColor: ["green", "saddlebrown"]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "Quantum Yield of C3 and C4 Plants"
+        },
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: "Quantum Yield (growth units)" }
+        }
+      }
+    }
+  });
+
+  function runSimulation() {
+    const co2 = document.getElementById("co2").value;
+    const lat = parseInt(document.getElementById("lat").value);
+
+    let { c3, c4 } = getYield(co2, lat);
+
+    chart.data.datasets[0].data = [c3, c4];
+    chart.options.plugins.title.text = `Quantum Yield at ${lat}°N (CO₂ = ${co2} ppm)`;
+    chart.update();
+
+    // Interpretation logic
+    let result = "";
+    const diff = Math.abs(c3 - c4);
+    const smaller = Math.min(c3, c4);
+
+    if (diff <= 0.1 * smaller) {
+      result = `At ${lat}°N and CO₂ = ${co2} ppm, C3 yield = ${c3}, C4 yield = ${c4}. 
+      The difference is less than 10% → predicted <b>mixed grassland</b>.`;
+    } else if (c3 > c4) {
+      result = `At ${lat}°N and CO₂ = ${co2} ppm, C3 yield = ${c3}, C4 yield = ${c4}. 
+      C3 is substantially higher → predicted <b>C3-dominated grassland</b>.`;
+    } else {
+      result = `At ${lat}°N and CO₂ = ${co2} ppm, C3 yield = ${c3}, C4 yield = ${c4}. 
+      C4 is substantially higher → predicted <b>C4-dominated grassland</b>.`;
+    }
+
+    document.getElementById("outputBox").innerHTML = `<strong>Simulation Result:</strong> ${result}`;
+  }
+</script>
+
+</body>
+</html>
